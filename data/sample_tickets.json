@@ -1,0 +1,52 @@
+[
+  {
+    "title": "Double charge on invoice",
+    "body": "I was charged twice for my subscription this month, please refund the extra charge.",
+    "customer_id": "cust_001"
+  },
+  {
+    "title": "Cannot log in",
+    "body": "The password reset email never arrives and I'm locked out.",
+    "customer_id": "cust_002"
+  },
+  {
+    "title": "Dashboard crashes on export",
+    "body": "Exporting reports crashes with a 500 error every time.",
+    "customer_id": "cust_003"
+  },
+  {
+    "title": "Dark mode request",
+    "body": "Please add dark mode to the mobile app, it would be nice.",
+    "customer_id": "cust_004"
+  },
+  {
+    "title": "Suspicious login from abroad",
+    "body": "Someone logged into my account from another country. Please help, I think I'm hacked.",
+    "customer_id": "cust_005"
+  },
+  {
+    "title": "App very slow",
+    "body": "The app takes forever to load since yesterday, everything lags.",
+    "customer_id": "cust_006"
+  },
+  {
+    "title": "Webhooks failing",
+    "body": "Webhook deliveries to our endpoint are failing with 401 errors.",
+    "customer_id": "cust_007"
+  },
+  {
+    "title": "How to invite teammates?",
+    "body": "How do I invite teammates to my workspace? Can't find it in the docs.",
+    "customer_id": "cust_008"
+  },
+  {
+    "title": "Payment failed at renewal",
+    "body": "My subscription renewal payment failed even though my credit card is valid.",
+    "customer_id": "cust_009"
+  },
+  {
+    "title": "API rate limit question",
+    "body": "We hit the API rate limit at low volume. Is our integration misconfigured?",
+    "customer_id": "cust_010"
+  }
+]
