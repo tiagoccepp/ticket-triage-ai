@@ -1,0 +1,80 @@
+{"title": "Double charge on my card", "body": "I was charged twice for my subscription this month. Please refund the extra charge.", "expected": "billing", "severity": "medium"}
+{"title": "Wrong invoice amount", "body": "My invoice shows $99 but my plan is $49. Can you fix the billing?", "expected": "billing", "severity": "medium"}
+{"title": "Cancel subscription", "body": "I want to cancel my subscription before the next renewal date.", "expected": "billing", "severity": "medium"}
+{"title": "Missing receipt", "body": "I paid yesterday but never received a receipt for the payment.", "expected": "billing", "severity": "medium"}
+{"title": "Overcharged after trial", "body": "My trial ended and I was overcharged on the first renewal payment.", "expected": "billing", "severity": "medium"}
+{"title": "Update credit card", "body": "My credit card expired. How do I update the payment method?", "expected": "billing", "severity": "medium"}
+{"title": "Refund request", "body": "Please refund the last charge, I cancelled before renewal.", "expected": "billing", "severity": "medium"}
+{"title": "Subscription not downgraded", "body": "I downgraded my plan but the invoice still shows the old price.", "expected": "billing", "severity": "medium"}
+{"title": "Payment failed", "body": "My payment keeps failing even though the card has funds.", "expected": "billing", "severity": "medium"}
+{"title": "VAT on invoice", "body": "I need a VAT receipt for my last three subscription invoices.", "expected": "billing", "severity": "medium"}
+{"title": "Cannot log in", "body": "I can't log in. The password reset email never arrives.", "expected": "account_access", "severity": "medium"}
+{"title": "Account locked", "body": "My account is locked after too many sign in attempts.", "expected": "account_access", "severity": "medium"}
+{"title": "2FA codes not working", "body": "My two-factor authentication codes are always rejected.", "expected": "account_access", "severity": "medium"}
+{"title": "SSO login fails", "body": "Sign in with SSO redirects me back to the login page.", "expected": "account_access", "severity": "medium"}
+{"title": "Access denied", "body": "I get access denied when opening the admin panel.", "expected": "account_access", "severity": "medium"}
+{"title": "Reset password link expired", "body": "Every password reset link says expired within seconds.", "expected": "account_access", "severity": "medium"}
+{"title": "Lost authenticator", "body": "I lost my authenticator app and can't complete authentication.", "expected": "account_access", "severity": "medium"}
+{"title": "Invite link invalid", "body": "The invite link to join my team says invalid or expired.", "expected": "account_access", "severity": "medium"}
+{"title": "Permission error", "body": "A teammate lacks permission to view our billing section.", "expected": "account_access", "severity": "medium"}
+{"title": "Session keeps expiring", "body": "I get signed out every few minutes and must log in again.", "expected": "account_access", "severity": "medium"}
+{"title": "Dashboard crashes on export", "body": "The dashboard crashes with a 500 error when I export reports.", "expected": "bug_report", "severity": "high"}
+{"title": "Save button broken", "body": "The save button does nothing on the settings page.", "expected": "bug_report", "severity": "high"}
+{"title": "Wrong totals", "body": "The totals on the analytics page are wrong after the update.", "expected": "bug_report", "severity": "high"}
+{"title": "File upload fails", "body": "Uploading a CSV fails with an exception every time.", "expected": "bug_report", "severity": "high"}
+{"title": "404 on help pages", "body": "Several help pages return a 404 error since this morning.", "expected": "bug_report", "severity": "high"}
+{"title": "Notifications duplicated", "body": "I get every notification three times, something is broken.", "expected": "bug_report", "severity": "high"}
+{"title": "Search returns nothing", "body": "Search is not working, it fails even for exact names.", "expected": "bug_report", "severity": "high"}
+{"title": "Mobile app crash", "body": "The mobile app crashes on launch after the latest update.", "expected": "bug_report", "severity": "high"}
+{"title": "Chart glitch", "body": "Charts render with a glitch when the dataset is empty.", "expected": "bug_report", "severity": "high"}
+{"title": "Timezone bug", "body": "Timestamps are off by 5 hours, the timezone handling is wrong.", "expected": "bug_report", "severity": "high"}
+{"title": "Dark mode please", "body": "Please add dark mode to the mobile app.", "expected": "feature_request", "severity": "low"}
+{"title": "PDF export", "body": "It would be nice to export reports as PDF.", "expected": "feature_request", "severity": "low"}
+{"title": "Slack notifications", "body": "I wish we had Slack notifications for new tickets.", "expected": "feature_request", "severity": "low"}
+{"title": "Bulk edit", "body": "Please add bulk edit for contacts, doing it one by one is slow.", "expected": "feature_request", "severity": "low"}
+{"title": "Custom fields", "body": "A suggestion: allow custom fields on the ticket form.", "expected": "feature_request", "severity": "low"}
+{"title": "Calendar view", "body": "Would be nice to have a calendar view for scheduled reports.", "expected": "feature_request", "severity": "low"}
+{"title": "More integrations", "body": "Please add support for Asana in the integrations page.", "expected": "feature_request", "severity": "low"}
+{"title": "Keyboard shortcuts", "body": "An improvement: keyboard shortcuts for the review queue.", "expected": "feature_request", "severity": "low"}
+{"title": "Public roadmap", "body": "Do you have a roadmap? I'd love to vote on features.", "expected": "feature_request", "severity": "low"}
+{"title": "Multi-language", "body": "Please add Spanish language support for the dashboard.", "expected": "feature_request", "severity": "low"}
+{"title": "Suspicious login", "body": "Someone logged into my account from another country.", "expected": "security", "severity": "critical"}
+{"title": "Leaked API key", "body": "I found an API key leaked in a public repo, please revoke it.", "expected": "security", "severity": "critical"}
+{"title": "Phishing email", "body": "I got a phishing email pretending to be your support team.", "expected": "security", "severity": "critical"}
+{"title": "Unauthorized charge attempt", "body": "There was an unauthorized access attempt on my account.", "expected": "security", "severity": "critical"}
+{"title": "Possible breach", "body": "We suspect a data breach, some records were accessed externally.", "expected": "security", "severity": "critical"}
+{"title": "Malware warning", "body": "My browser flags your download page with a malware warning.", "expected": "security", "severity": "critical"}
+{"title": "Vulnerability report", "body": "I found a vulnerability: the reset token never expires.", "expected": "security", "severity": "critical"}
+{"title": "Account compromised", "body": "My account is compromised, please lock it immediately.", "expected": "security", "severity": "critical"}
+{"title": "Intrusion alert", "body": "Our firewall logged an intrusion attempt against your webhook.", "expected": "security", "severity": "critical"}
+{"title": "Suspicious admin user", "body": "A suspicious unknown user appeared in our admin list.", "expected": "security", "severity": "critical"}
+{"title": "App very slow", "body": "The app takes forever to load since yesterday.", "expected": "performance", "severity": "high"}
+{"title": "API timeouts", "body": "API requests keep timing out after 30 seconds.", "expected": "performance", "severity": "high"}
+{"title": "Dashboard hangs", "body": "The dashboard hangs when I open large reports.", "expected": "performance", "severity": "high"}
+{"title": "High latency", "body": "We see high latency on every endpoint this morning.", "expected": "performance", "severity": "high"}
+{"title": "Page unresponsive", "body": "The settings page becomes unresponsive with big teams.", "expected": "performance", "severity": "high"}
+{"title": "Slow search", "body": "Search is slow, results take over 10 seconds to appear.", "expected": "performance", "severity": "high"}
+{"title": "Degraded service", "body": "Is the service degraded? Everything lags for our team.", "expected": "performance", "severity": "high"}
+{"title": "Export too slow", "body": "Exports take forever for workspaces with many tickets.", "expected": "performance", "severity": "high"}
+{"title": "App lag on mobile", "body": "The mobile app lags badly when scrolling the queue.", "expected": "performance", "severity": "high"}
+{"title": "Timeout on upload", "body": "Large uploads always hit a timeout before finishing.", "expected": "performance", "severity": "high"}
+{"title": "Webhooks failing", "body": "Webhook deliveries are failing with 401 errors.", "expected": "integration_api", "severity": "medium"}
+{"title": "Paginate SDK", "body": "How do I paginate the list endpoint in the Python SDK?", "expected": "integration_api", "severity": "medium"}
+{"title": "Rate limit hit", "body": "We hit the API rate limit at very low volume, is that expected?", "expected": "integration_api", "severity": "medium"}
+{"title": "OAuth broken", "body": "The OAuth flow fails at the token exchange step.", "expected": "integration_api", "severity": "medium"}
+{"title": "Zapier integration", "body": "The Zapier integration stopped creating tickets yesterday.", "expected": "integration_api", "severity": "medium"}
+{"title": "Endpoint returns 400", "body": "POST to the tickets endpoint returns 400 with valid JSON.", "expected": "integration_api", "severity": "medium"}
+{"title": "SDK install fails", "body": "The Node SDK install fails on version 20.", "expected": "integration_api", "severity": "medium"}
+{"title": "Webhook retries", "body": "Do webhooks retry on failure? We missed several events.", "expected": "integration_api", "severity": "medium"}
+{"title": "API token expired", "body": "Our API token expired with no warning email.", "expected": "integration_api", "severity": "medium"}
+{"title": "Slack integration", "body": "How do I configure the Slack integration for alerts?", "expected": "integration_api", "severity": "medium"}
+{"title": "Invite teammates", "body": "How do I invite teammates to my workspace?", "expected": "general_inquiry", "severity": "low"}
+{"title": "SSO docs", "body": "Where is the documentation for SSO setup?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Pricing question", "body": "What is the price difference between Pro and Team plans?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Trial length", "body": "How long is the free trial and what is included?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Help with onboarding", "body": "Can someone help us with onboarding next week?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Data retention", "body": "What is your data retention policy for closed tickets?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Keyboard docs", "body": "Where is the list of keyboard shortcuts documented?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Support hours", "body": "What are your support hours for the basic plan?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Cancel vs pause", "body": "What is the difference between pausing and cancelling?", "expected": "general_inquiry", "severity": "low"}
+{"title": "Export docs", "body": "How do I export my data if we decide to leave?", "expected": "general_inquiry", "severity": "low"}
