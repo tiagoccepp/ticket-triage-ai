@@ -11,7 +11,8 @@ OpenAI-compatible endpoint works. Tests, evals and the demo run offline
 | OpenAI | `https://api.openai.com/v1` (default) | `LLM_API_KEY` | paid |
 | OpenRouter | `https://openrouter.ai/api/v1` | free key at openrouter.ai/keys | free `:free` models, no card |
 | Ollama (local) | `http://localhost:11434/v1` | none needed | free, private |
-| opencode Zen / other gateways | your gateway URL | your gateway key | varies |
+| opencode Zen ✅ verified | `https://opencode.ai/zen/go/v1` | your Zen key | free `beam-free` model ($0) |
+| other gateways | your gateway URL | your gateway key | varies |
 
 ## Configure
 
@@ -36,6 +37,9 @@ against the taxonomy, and never prints the key. CI stays keyless: tests and
 evals always run on the lexical/mock backends.
 
 ## Notes
+
+- Zen requires an `x-opencode-session` header — `scripts/live_smoke.py` sends it
+  automatically (override with `OPENCODE_SESSION_ID`); other providers ignore it.
 
 - The code-enforced validity gate (`src/classifier.py`) rejects any label
   outside the taxonomy regardless of provider — hallucinated labels can never
