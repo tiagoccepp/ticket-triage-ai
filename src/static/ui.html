@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket Triage AI — demo</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 980px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  h1 { font-size: 1.4rem; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
+  input[type=text], textarea { width: 100%; padding: .5rem; font-size: .95rem; margin: .25rem 0 .6rem; box-sizing: border-box; }
+  button { padding: .5rem .9rem; font-size: .9rem; cursor: pointer; margin-right: .3rem; }
+  .card { background: #8882; border-radius: 8px; padding: .8rem 1rem; margin: .6rem 0; }
+  .badge { display: inline-block; padding: .15rem .6rem; border-radius: 999px; font-size: .78rem; margin-right: .3rem; }
+  .auto { background: #1a7f37; color: #fff; }
+  .rev { background: #9a6700; color: #fff; }
+  .abs { background: #8250df; color: #fff; }
+  .conf { height: 8px; background: #8884; border-radius: 4px; margin: .3rem 0; }
+  .conf > div { height: 100%; background: #0969da; border-radius: 4px; }
+  .meta { color: #888; font-size: .82rem; }
+  .qitem { border-left: 3px solid #9a6700; padding: .3rem .8rem; margin: .5rem 0; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<h1>Ticket Triage AI <span class="meta">— offline demo (lexical backend, keyless)</span></h1>
+<div id="metrics" class="meta">loading metrics…</div>
+<div class="cols">
+  <div>
+    <h2>Submit ticket</h2>
+    <input id="title" type="text" placeholder="Title" value="Charged twice this month">
+    <textarea id="body" rows="4" placeholder="Describe the issue…">I was charged twice on my credit card this month, please refund the duplicate charge.</textarea>
+    <input id="customer" type="text" placeholder="customer id (optional)" value="cust-1">
+    <div>
+      <button onclick="submitTicket()">Triage</button>
+      <button onclick="fill('VPN not working','Cannot connect to the corporate VPN since this morning, error 809.','cust-2')">sample: vpn</button>
+      <button onclick="fill('hmm','not sure, thing is weird','cust-3')">sample: vague ⛔</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <div>
+    <h2>Human review queue</h2>
+    <div class="row"><button onclick="loadQueue()">Refresh queue</button></div>
+    <div id="queue"></div>
+  </div>
+</div>
+<p class="meta"><a href="/docs">API docs</a> · POST /tickets/submit · GET /review-queue · POST /review/{id} · GET /metrics</p>
+<script>
+function fill(t, b, c){ document.getElementById('title').value=t; document.getElementById('body').value=b; document.getElementById('customer').value=c; }
+function badge(a){
+  if(a==='auto_route') return '<span class="badge auto">AUTO-ROUTE</span>';
+  if(a==='abstain') return '<span class="badge abs">ABSTAIN</span>';
+  return '<span class="badge rev">HUMAN REVIEW</span>';
+}
+async function submitTicket(){
+  const r = await fetch('/tickets/submit', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({title: document.getElementById('title').value, body: document.getElementById('body').value, customer_id: document.getElementById('customer').value})});
+  const j = await r.json();
+  document.getElementById('result').innerHTML = '<div class="card">' + badge(j.action) +
+    ' <b>' + j.label + '</b> <span class="meta">conf ' + j.confidence.toFixed(2) +
+    (j.runner_up ? ' · runner-up: ' + j.runner_up : '') + '</span>' +
+    '<div class="conf"><div style="width:' + Math.round(j.confidence*100) + '%"></div></div>' +
+    '<div class="meta">ticket ' + j.ticket_id + ' · ' + j.latency_ms.toFixed(1) + 'ms' +
+    (j.duplicate_of ? ' · ⚠ duplicate of ' + j.duplicate_of + ' (' + j.duplicate_score.toFixed(2) + ')' : '') +
+    '<br>reasons: ' + (j.reasons.join('; ') || '—') + '<br>baseline: ' + j.baseline_label + ' · model: ' + j.model_label +
+    ' · agreement: ' + j.agreement + '</div></div>';
+  loadMetrics(); loadQueue();
+}
+async function loadMetrics(){
+  const j = await (await fetch('/metrics')).json();
+  document.getElementById('metrics').innerHTML = 'total: <b>' + j.total + '</b> · review rate: <b>' + j.review_rate + '</b> · by status: ' + JSON.stringify(j.counts);
+}
+async function loadQueue(){
+  const j = await (await fetch('/review-queue')).json();
+  const q = document.getElementById('queue');
+  if(!j.tickets.length){ q.innerHTML = '<p class="meta">queue empty — everything confident so far.</p>'; return; }
+  q.innerHTML = j.tickets.map(t => '<div class="qitem"><b>' + (t.title||t.ticket_id) + '</b><br><span class="meta">' +
+    (t.label||'?') + ' · ' + (t.status||'') + ' · ' + t.ticket_id + '</span><br>' +
+    '<button onclick="review(\'' + t.ticket_id + '\',\'approve\')">Approve</button>' +
+    '<button onclick="review(\'' + t.ticket_id + '\',\'override\')">Override→billing</button></div>').join('');
+}
+async function review(id, decision){
+  const body = {decision: decision, reviewer: 'demo-reviewer'};
+  if(decision === 'override') body.label = 'billing';
+  await fetch('/review/' + id, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  loadQueue(); loadMetrics();
+}
+loadMetrics(); loadQueue();
+</script>
+</body>
+</html>

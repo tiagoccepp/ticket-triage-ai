@@ -12,9 +12,11 @@ Endpoints:
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from src.classifier import TriageOutcome, TriagePipeline
@@ -65,6 +67,12 @@ class TicketWithAudit(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "labels": ",".join(list_ids())}
+
+
+@app.get("/ui", include_in_schema=False)
+def ui() -> FileResponse:
+    """Minimal demo UI (single static file, no build step)."""
+    return FileResponse(Path(__file__).resolve().parent / "static" / "ui.html")
 
 
 @app.post("/tickets/submit", response_model=TriageOutcome)
