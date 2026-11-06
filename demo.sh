@@ -11,6 +11,7 @@ echo "  POST /tickets/submit   {\"title\": ..., \"body\": ..., \"customer_id\": 
 echo "  GET  /review-queue"
 echo "  GET  /metrics"
 echo "  GET  /tickets/{id}"
+echo "  GET  /ui            (demo web UI — open in browser)"
 echo ""
 echo "Full request/response transcript: demo/transcript.md"
 exec python3 -m uvicorn src.api:app --port 8002
