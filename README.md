@@ -4,7 +4,7 @@ Production-grade MVP that classifies support tickets with **confidence-gated aut
 
 Built with modern 2026 patterns: taxonomy-as-data (no retraining to add a label), code-enforced validity gate, runner-up calibration, hybrid baseline+LLM policy, duplicate detection, and a persisted audit trail. Fully offline-capable: CI runs keyless on the lexical backend.
 
-> Developed with AI pair-programming workflows (Claude Code / Cursor style): spec-driven file layout, test-first backends, eval-gated thresholds.
+> I defined the taxonomy-as-data design and confidence policy, implemented it with AI assistance (Claude Code), and validated thresholds with evals.
 >
 > ✅ **Live-verified** against a real LLM API: real JSON-mode classification confirmed (opencode Zen, free `beam-free` model, 2026-11-05) — see `docs/LIVE_VERIFIED.md`.
 
