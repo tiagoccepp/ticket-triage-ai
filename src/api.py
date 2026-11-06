@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -27,6 +28,14 @@ from src.taxonomy import is_valid_label, list_ids
 
 app = FastAPI(title="Ticket Triage AI", version="0.1.0")
 app.add_middleware(RateLimitMiddleware, prefixes=("/tickets/submit", "/review/"))
+# Public demo API: allow browser fetches from the portfolio dashboard.
+# Rate-limited, no credentials — safe to be open.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 _pipeline: TriagePipeline | None = None
 _store: TicketStore | None = None

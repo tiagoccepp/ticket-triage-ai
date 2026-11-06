@@ -94,3 +94,9 @@ def test_metrics_endpoint(client):
     r = client.get("/metrics")
     assert r.status_code == 200
     assert r.json()["total"] >= 1
+
+
+def test_cors_allows_browser_origin(client):
+    r = client.get("/health", headers={"Origin": "https://tiagoccepp.github.io"})
+    assert r.status_code == 200
+    assert r.headers.get("access-control-allow-origin") == "*"
