@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import time
 import urllib.request
@@ -261,6 +262,8 @@ class OpenAICompatibleBackend:
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.settings.llm_api_key}",
+                "User-Agent": "portfolio-live-smoke/1.0",
+                "x-opencode-session": os.getenv("OPENCODE_SESSION_ID", "portfolio-api"),
             },
             method="POST",
         )

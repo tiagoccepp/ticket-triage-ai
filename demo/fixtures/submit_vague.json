@@ -1,0 +1,16 @@
+{
+ "ticket_id": "t_8ff1d682d3dc",
+ "label": "general_inquiry",
+ "confidence": 0.3,
+ "runner_up": null,
+ "action": "human_review",
+ "reasons": [
+  "ABSTENTION"
+ ],
+ "agreement": false,
+ "baseline_label": "general_inquiry",
+ "model_label": "abstain",
+ "duplicate_of": null,
+ "duplicate_score": 0.079,
+ "latency_ms": 2495.9
+}

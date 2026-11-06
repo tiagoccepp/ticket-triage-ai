@@ -169,7 +169,12 @@ header,.kpi,.panel{animation:rise .35s ease-out backwards}
 </div>
 <div id="toasts"></div>
 <script>
+const FIXTURES={"health":{"status":"ok","labels":"billing,account_access,bug_report,feature_request,security,performance,integration_api,general_inquiry"},"metrics":{"counts":{"needs_review":2,"routed":2},"total":4,"review_rate":0.5},"queue":{"tickets":[{"id":"t_8ff1d682d3dc","title":"hmm","body":"not sure, thing is weird","customer_id":"cust-3","label":"general_inquiry","confidence":0.3,"runner_up":"","status":"needs_review","duplicate_of":"","created_at":"2026-11-06T11:52:28.554748+00:00","updated_at":"2026-11-06T11:52:28.554748+00:00"},{"id":"t_e98c1676bd6e","title":"VPN not working","body":"Cannot connect to the corporate VPN since this morning, error 809.","customer_id":"cust-2","label":"bug_report","confidence":0.49,"runner_up":"","status":"needs_review","duplicate_of":"","created_at":"2026-11-06T11:52:26.023355+00:00","updated_at":"2026-11-06T11:52:26.023355+00:00"}]},"submit_billing":{"ticket_id":"t_4e34c93661c7","label":"billing","confidence":0.99,"runner_up":null,"action":"auto_route","reasons":[],"agreement":true,"baseline_label":"billing","model_label":"billing","duplicate_of":"t_4ef3e70238a4","duplicate_score":1.0,"latency_ms":2087.31},"submit_vague":{"ticket_id":"t_8ff1d682d3dc","label":"general_inquiry","confidence":0.3,"runner_up":null,"action":"human_review","reasons":["ABSTENTION"],"agreement":false,"baseline_label":"general_inquiry","model_label":"abstain","duplicate_of":null,"duplicate_score":0.079,"latency_ms":2495.9},"submit_vpn":{"ticket_id":"t_e98c1676bd6e","label":"bug_report","confidence":0.49,"runner_up":null,"action":"human_review","reasons":["ABSTENTION"],"agreement":false,"baseline_label":"bug_report","model_label":"abstain","duplicate_of":null,"duplicate_score":0.072,"latency_ms":2137.75}};
 const $=id=>document.getElementById(id);
+const DEMO=/[?&]demo=1(&|$)/.test(location.search);
+const FIXMAP={"Charged twice this month\nI was charged twice on my credit card this month, please refund the duplicate charge.":"submit_billing","VPN not working\nCannot connect to the corporate VPN since this morning, error 809.":"submit_vpn","hmm\nnot sure, thing is weird":"submit_vague"};
+let demoQ=null,demoM=null;
+if(DEMO&&typeof FIXTURES!=='undefined'){demoQ=(FIXTURES.queue.tickets||[]).map(t=>({...t}));demoM=JSON.parse(JSON.stringify(FIXTURES.metrics));const c=document.querySelector('.chip.live');if(c)c.innerHTML='◉ sample responses';const b=document.createElement('div');b.style.cssText='background:rgba(76,195,255,.1);border-bottom:1px solid rgba(76,195,255,.4);color:#4CC3FF;font-family:var(--font-mono);font-size:.75rem;text-align:center;padding:.4rem .8rem';b.textContent='Sample mode — pre-recorded real triage (beam-free). Open without ?demo=1 against a live backend.';document.body.prepend(b);}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let LABELS=['billing'],busy=false;
@@ -198,16 +203,26 @@ async function submitTicket(){
   if(busy)return;busy=true;
   const btn=$('triageBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Triaging…';
   try{
-    const r=await fetch('/tickets/submit',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({title:$('title').value,body:$('body').value,customer_id:$('customer').value})});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json();
+    let j;
+    if(DEMO){
+      const k=FIXMAP[$('title').value.trim()+'\n'+$('body').value.trim()];
+      if(!k||!FIXTURES[k]){$('result').innerHTML='<div class="verdict"><div class="vmeta">Sample mode covers the default ticket plus the vpn/vague samples — use those to replay recorded triage.</div></div>';btn.disabled=false;btn.textContent='Triage';busy=false;return;}
+      await new Promise(r=>setTimeout(r,600));
+      j=FIXTURES[k];
+      demoM.total++;const ck=j.action==='auto_route'?'routed':'needs_review';demoM.counts[ck]=(demoM.counts[ck]||0)+1;
+      if(j.action!=='auto_route'&&!demoQ.some(t=>t.id===j.ticket_id)){demoQ.unshift({id:j.ticket_id,title:$('title').value,label:j.label,status:'needs_review',confidence:j.confidence});}
+    }else{
+      const r=await fetch('/tickets/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({title:$('title').value,body:$('body').value,customer_id:$('customer').value})});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      j=await r.json();
+    }
     $('result').innerHTML='<div class="verdict"><div class="vtop">'+badge(j.action)+
       '<span class="vlabel">'+esc(j.label)+'</span></div>'+
       '<div class="confbar"><i data-w="'+Math.round(j.confidence*100)+'" style="background:'+barColor(j.action)+'"></i></div>'+
       '<div class="vmeta">confidence '+j.confidence.toFixed(2)+(j.runner_up?' · runner-up '+esc(j.runner_up):'')+
       '<br>ticket '+esc(j.ticket_id)+' · '+j.latency_ms.toFixed(1)+'ms'+
-      '<br>baseline '+esc(j.baseline_label)+' · model '+esc(j.model_label)+' · agreement '+(j.agreement?'yes':'no')+'</div>'+
+      '<br>baseline '+esc(j.baseline_label)+' · model '+esc(j.model_label)+' · agreement '+(j.agreement?'yes':'no')+(DEMO?'<br>sample mode · recorded':'')+'</div>'+
       ((j.reasons&&j.reasons.length)?'<div class="reasons">'+j.reasons.map(x=>'<span class="reason">'+esc(x)+'</span>').join('')+'</div>':'')+
       (j.duplicate_of?'<div class="dup">Possible duplicate of '+esc(j.duplicate_of)+' (score '+j.duplicate_score.toFixed(2)+')</div>':'')+'</div>';
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -217,13 +232,19 @@ async function submitTicket(){
     toast(j.action==='auto_route'?'Routed to '+j.label:'Sent to human review ('+j.label+')',j.action==='auto_route'?'ok':'warn');
     loadMetrics();loadQueue();
   }catch(e){
-    $('result').innerHTML='<div class="verdict"><div class="vmeta">Request failed ('+esc(e.message)+'). Is the API running?</div></div>';
+    const staticHost=!DEMO&&!/^(localhost|127\.0\.0\.1)/.test(location.hostname);
+    $('result').innerHTML='<div class="verdict"><div class="vmeta">Request failed ('+esc(e.message)+'). '+(staticHost?'No backend here — <a href="?demo=1">open sample mode</a>.':'Is the API running?')+'</div></div>';
   }
   btn.disabled=false;btn.textContent='Triage';busy=false;
 }
 async function loadMetrics(){
+  if(DEMO&&demoM){renderMetrics(demoM);return;}
   try{
     const j=await(await fetch('/metrics')).json();
+    renderMetrics(j);
+  }catch{}
+}
+function renderMetrics(j){
     const total=j.total||0,rr=j.review_rate||0;
     let auto=null;
     if(j.counts&&total){const routed=j.counts.routed||j.counts.auto_routed||0;auto=Math.round(routed/total*100);}
@@ -231,13 +252,13 @@ async function loadMetrics(){
     $('kTotal').textContent=total;
     $('kReview').innerHTML=Math.round(rr*100)+'<small>%</small>';
     $('kAuto').innerHTML=auto+'<small>%</small>';
-  }catch{}
 }
 async function loadQueue(){
   const q=$('queue');
   try{
-    const j=await(await fetch('/review-queue')).json();
-    const items=j.tickets||[];
+    let items;
+    if(DEMO){items=demoQ;}
+    else{const j=await(await fetch('/review-queue')).json();items=j.tickets||[];}
     $('qCount').textContent='· '+items.length;
     if(!items.length){q.innerHTML='<div class="empty">Queue empty — everything confident so far.</div>';return;}
     q.innerHTML=items.map(t=>'<div class="qitem" data-id="'+esc(t.id)+'">'+
@@ -257,14 +278,23 @@ async function loadQueue(){
 async function review(id,decision,label,item){
   const body={decision,reviewer:'demo-reviewer'};
   if(decision==='override')body.label=label;
+  if(DEMO){
+    const ix=demoQ.findIndex(t=>t.id===id);
+    if(ix>=0){if(decision==='override')demoQ[ix].label=label;demoQ.splice(ix,1);}
+    demoM.counts.needs_review=Math.max(0,(demoM.counts.needs_review||1)-1);
+    demoM.counts.reviewed=(demoM.counts.reviewed||0)+1;
+    item.classList.add('gone');setTimeout(()=>{loadQueue();loadMetrics();},reduceMotion?0:300);
+    toast(decision==='approve'?'Approved '+id:'Overridden → '+label,'ok');return;
+  }
   const r=await fetch('/review/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.ok){item.classList.add('gone');setTimeout(()=>{loadQueue();loadMetrics();},reduceMotion?0:300);toast(decision==='approve'?'Approved '+id:'Overridden → '+label,'ok');}
   else toast('Review failed ('+r.status+')','warn');
 }
-fetch('/health').then(r=>r.json()).then(h=>{
+if(DEMO&&typeof FIXTURES!=='undefined'&&FIXTURES.health&&FIXTURES.health.labels){LABELS=String(FIXTURES.health.labels).split(',').map(s=>s.trim()).filter(Boolean);loadQueue();}
+else{fetch('/health').then(r=>r.json()).then(h=>{
   if(h.labels)LABELS=String(h.labels).split(',').map(s=>s.trim()).filter(Boolean);
   loadQueue();
-}).catch(()=>loadQueue());
+}).catch(()=>loadQueue());}
 loadMetrics();
 </script>
 </body>

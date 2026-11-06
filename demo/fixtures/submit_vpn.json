@@ -1,0 +1,16 @@
+{
+ "ticket_id": "t_e98c1676bd6e",
+ "label": "bug_report",
+ "confidence": 0.49,
+ "runner_up": null,
+ "action": "human_review",
+ "reasons": [
+  "ABSTENTION"
+ ],
+ "agreement": false,
+ "baseline_label": "bug_report",
+ "model_label": "abstain",
+ "duplicate_of": null,
+ "duplicate_score": 0.072,
+ "latency_ms": 2137.75
+}

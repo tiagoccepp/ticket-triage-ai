@@ -10,10 +10,14 @@ Built with modern 2026 patterns: taxonomy-as-data (no retraining to add a label)
 
 ## Demo
 
+**Try it now (no install):** [instant demo](https://tiagoccepp.github.io/ticket-triage-ai/?demo=1) — pre-recorded real triage, loads in seconds.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tiagoccepp/ticket-triage-ai)
+
 ![Auto-route: confident billing ticket](docs/img/route.png)
 ![Review queue: vague ticket flagged for a human](docs/img/queue.png)
 
-*Confident tickets auto-route with label + confidence; vague ones land in the human review queue with Approve/Override — `./demo.sh`, then open `/ui`.*
+*Confident tickets auto-route with label + confidence; vague ones land in the human review queue with Approve/Override — `./demo.sh`, then open `/ui`. The instant demo above replays the same UI with recorded live triage (`?demo=1` sample mode).*
 
 ## Problem
 

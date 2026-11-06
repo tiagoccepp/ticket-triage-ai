@@ -1,0 +1,14 @@
+{
+ "ticket_id": "t_4e34c93661c7",
+ "label": "billing",
+ "confidence": 0.99,
+ "runner_up": null,
+ "action": "auto_route",
+ "reasons": [],
+ "agreement": true,
+ "baseline_label": "billing",
+ "model_label": "billing",
+ "duplicate_of": "t_4ef3e70238a4",
+ "duplicate_score": 1.0,
+ "latency_ms": 2087.31
+}
