@@ -8,6 +8,13 @@ Built with modern 2026 patterns: taxonomy-as-data (no retraining to add a label)
 >
 > ✅ **Live-verified** against a real LLM API: real JSON-mode classification confirmed (opencode Zen, free `beam-free` model, 2026-11-05) — see `docs/LIVE_VERIFIED.md`.
 
+## Demo
+
+![Auto-route: confident billing ticket](docs/img/route.png)
+![Review queue: vague ticket flagged for a human](docs/img/queue.png)
+
+*Confident tickets auto-route with label + confidence; vague ones land in the human review queue with Approve/Override — `./demo.sh`, then open `/ui`.*
+
 ## Problem
 
 Support teams drown in untriaged tickets. Naive classifiers either auto-route everything (misroutes erode trust) or surface raw model output with no calibration. This project answers:
