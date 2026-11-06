@@ -22,9 +22,11 @@ from pydantic import BaseModel, Field
 from src.classifier import TriageOutcome, TriagePipeline
 from src.config import get_settings
 from src.db import TicketStore
+from src.ratelimit import RateLimitMiddleware
 from src.taxonomy import is_valid_label, list_ids
 
 app = FastAPI(title="Ticket Triage AI", version="0.1.0")
+app.add_middleware(RateLimitMiddleware, prefixes=("/tickets/submit", "/review/"))
 
 _pipeline: TriagePipeline | None = None
 _store: TicketStore | None = None
