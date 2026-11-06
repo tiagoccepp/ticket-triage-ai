@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B0F14">
+<meta name="description" content="Ticket Triage AI — confidence-gated routing with a human review queue. Live demo.">
+<meta property="og:title" content="Ticket Triage AI">
+<meta property="og:description" content="Confidence-gated ticket classifier: auto-route the certain, queue the rest. Live demo.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B0F14'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle' fill='%234CC3FF' font-family='Georgia'%3E%E2%97%88%3C/text%3E%3C/svg%3E">
+<title>Ticket Triage AI — live demo</title>
+<style>
+/*__FONT_FACE__*/
+:root{
+  --bg:#0B0F14; --panel:#10161D; --raised:#151D26;
+  --line:rgba(232,237,242,.09); --line-strong:rgba(232,237,242,.16);
+  --text:#E8EDF2; --muted:#93A1B0; --faint:#5D6B7A;
+  --accent:#4CC3FF; --accent-dim:rgba(76,195,255,.12);
+  --ok:#34C77B; --ok-dim:rgba(52,199,123,.12);
+  --amber:#E5A13D; --amber-dim:rgba(229,161,61,.12);
+  --abstain:#9B7EDE; --abstain-dim:rgba(155,126,222,.13);
+  --danger:#E5484D; --danger-dim:rgba(229,72,77,.12);
+  --font-display:'Sora',system-ui,sans-serif;
+  --font-body:'PublicSans',system-ui,sans-serif;
+  --font-mono:'JetBrainsMono',ui-monospace,SFMono-Regular,monospace;
+  --r-panel:12px; --r-card:10px; --r-input:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.55;min-height:100vh}
+::selection{background:rgba(76,195,255,.35)}
+a{color:var(--accent)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+header{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--line);background:rgba(11,15,20,.92);position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}
+.mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(145deg,#1b2530,#10161d);border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--accent);font-size:18px;flex:none}
+header h1{font-family:var(--font-display);font-size:1.02rem;font-weight:800;white-space:nowrap}
+header h1 span{color:var(--faint);font-weight:700}
+.chips{margin-left:auto;display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:.2rem .65rem;white-space:nowrap}
+.chip.live{color:var(--accent);border-color:rgba(76,195,255,.35)}
+.chip.live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:.35rem;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.apilink{font-size:.8rem;color:var(--muted);text-decoration:none;border-bottom:1px dotted var(--faint)}
+.apilink:hover{color:var(--accent)}
+
+.wrap{max-width:1280px;margin:0 auto;padding:1.3rem 1.4rem 3rem}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1.1rem}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:.65rem .9rem}
+.kpi .k{font-family:var(--font-display);font-size:.68rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+.kpi .v{font-family:var(--font-display);font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:.85rem;color:var(--muted);font-weight:700}
+.kpi.amber .v{color:var(--amber)}.kpi.ok .v{color:var(--ok)}.kpi.sky .v{color:var(--accent)}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.1rem;align-items:start}
+@media(max-width:920px){main{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){header{padding:.7rem .9rem}header h1{font-size:.8rem}header h1 span{display:none}.chip:not(.live),.apilink{display:none}.chip{font-size:.65rem;padding:.15rem .55rem}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);padding:1.1rem 1.2rem}
+.panel h2{font-family:var(--font-display);font-size:.82rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem}
+.panel h2 b{color:var(--accent);font-weight:800}
+
+label.fl{display:block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:.7rem 0 .3rem}
+label.fl:first-of-type{margin-top:0}
+input[type=text],textarea,select{background:var(--raised);border:1px solid var(--line-strong);border-radius:var(--r-input);color:var(--text);font-family:inherit;font-size:.92rem;padding:.6rem .75rem;width:100%}
+textarea{resize:vertical;min-height:86px}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none}
+.btnrow{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.btn{background:var(--accent);border:1px solid var(--accent);color:#0a141b;font-weight:700;font-size:.9rem;border-radius:var(--r-input);padding:.62rem 1.3rem;cursor:pointer;transition:filter .18s}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.6;cursor:wait;filter:none}
+.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--text);border-radius:var(--r-input);padding:.62rem .9rem;font-size:.85rem;cursor:pointer;transition:border-color .18s}
+.ghost:hover{border-color:var(--accent)}
+.ghost:disabled{opacity:.55;cursor:wait}
+.spin{display:inline-block;width:.85em;height:.85em;border:2px solid rgba(10,20,27,.3);border-top-color:#0a141b;border-radius:50%;animation:rot .7s linear infinite;vertical-align:-1px;margin-right:.4em}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* verdict card */
+#result{margin-top:1rem}
+#result:empty{display:none}
+.verdict{background:var(--raised);border:1px solid var(--line-strong);border-radius:var(--r-card);padding:1rem 1.1rem;animation:rise .3s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.vtop{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.badge{font-family:var(--font-mono);font-size:.7rem;font-weight:600;letter-spacing:.06em;border-radius:5px;padding:.2rem .55rem}
+.badge.auto{background:var(--ok-dim);color:var(--ok);border:1px solid rgba(52,199,123,.4)}
+.badge.rev{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(229,161,61,.45)}
+.badge.abs{background:var(--abstain-dim);color:var(--abstain);border:1px solid rgba(155,126,222,.45)}
+.vlabel{font-family:var(--font-display);font-size:1.35rem;font-weight:800}
+.confbar{height:9px;background:rgba(232,237,242,.1);border-radius:5px;margin:.6rem 0 .3rem;overflow:hidden}
+.confbar i{display:block;height:100%;border-radius:5px;width:0;transition:width .7s cubic-bezier(.2,.7,.2,1)}
+.vmeta{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);line-height:1.9}
+.reasons{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem}
+.reason{font-family:var(--font-mono);font-size:.68rem;background:rgba(232,237,242,.06);border:1px solid var(--line);border-radius:5px;padding:.15rem .5rem;color:var(--muted)}
+.dup{background:var(--danger-dim);border:1px solid rgba(229,72,77,.45);color:#f3b1b4;border-radius:7px;padding:.5rem .7rem;font-size:.82rem;margin-top:.6rem}
+
+/* queue */
+.qitem{background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:var(--r-card);padding:.7rem .85rem;margin-bottom:.6rem;animation:rise .3s ease-out}
+.qitem.gone{opacity:0;transform:translateX(24px);transition:all .3s}
+.qitem .qt{font-weight:600;font-size:.9rem}
+.qitem .qm{font-family:var(--font-mono);font-size:.7rem;color:var(--faint);margin:.15rem 0 .5rem}
+.qitem .confbar{margin:.35rem 0 .5rem}
+.qactions{display:flex;gap:.45rem;flex-wrap:wrap;align-items:center}
+.qactions select{width:auto;font-size:.8rem;padding:.45rem .6rem}
+.btn-sm{border-radius:7px;padding:.45rem .85rem;font-size:.82rem;font-weight:600;cursor:pointer;border:1px solid}
+.btn-ok{background:rgba(52,199,123,.14);border-color:rgba(52,199,123,.5);color:var(--ok)}
+.btn-ok:hover{background:rgba(52,199,123,.25)}
+.btn-over{background:transparent;border-color:var(--line-strong);color:var(--text)}
+.btn-over:hover{border-color:var(--amber)}
+.empty{border:1px dashed var(--line-strong);border-radius:var(--r-card);padding:2rem 1rem;text-align:center;color:var(--faint);font-size:.9rem}
+
+/* toasts */
+#toasts{position:fixed;right:1.1rem;bottom:1.1rem;display:flex;flex-direction:column;gap:.5rem;z-index:50}
+.toast{background:var(--raised);border:1px solid var(--line-strong);border-left:3px solid var(--accent);border-radius:9px;padding:.6rem .9rem;font-size:.85rem;max-width:320px;animation:rise .25s ease-out;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+.toast.ok{border-left-color:var(--ok)}.toast.warn{border-left-color:var(--amber)}
+.toast.out{opacity:0;transform:translateX(20px);transition:all .3s}
+footer{color:var(--faint);font-family:var(--font-mono);font-size:.72rem;margin-top:1.4rem}
+
+header,.kpi,.panel{animation:rise .35s ease-out backwards}
+.kpi:nth-child(2){animation-delay:.05s}.kpi:nth-child(3){animation-delay:.1s}.kpi:nth-child(4){animation-delay:.15s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">◈</div>
+  <h1>Ticket Triage AI <span>live demo</span></h1>
+  <div class="chips">
+    <span class="chip live"><i></i>lexical backend</span>
+    <span class="chip">keyless</span>
+    <a class="apilink" href="/docs">API docs</a>
+  </div>
+</header>
+<div class="wrap">
+  <div class="kpis">
+    <div class="kpi"><div class="k">Tickets</div><div class="v" id="kTotal">–</div></div>
+    <div class="kpi amber"><div class="k">Review rate</div><div class="v" id="kReview">–</div></div>
+    <div class="kpi ok"><div class="k">Auto-routed</div><div class="v" id="kAuto">–</div></div>
+    <div class="kpi sky"><div class="k">Last triage</div><div class="v" id="kLat">–</div></div>
+  </div>
+  <main>
+    <section class="panel" aria-label="Submit ticket">
+      <h2>Submit desk</h2>
+      <label class="fl" for="title">Title</label>
+      <input id="title" type="text" value="Charged twice this month" maxlength="300">
+      <label class="fl" for="body">Body</label>
+      <textarea id="body" maxlength="10000">I was charged twice on my credit card this month, please refund the duplicate charge.</textarea>
+      <label class="fl" for="customer">Customer id</label>
+      <input id="customer" type="text" value="cust-1" maxlength="100">
+      <div class="btnrow">
+        <button class="btn" id="triageBtn">Triage</button>
+        <button class="ghost" data-s="vpn">sample: vpn</button>
+        <button class="ghost" data-s="vague">sample: vague</button>
+      </div>
+      <div id="result"></div>
+    </section>
+    <section class="panel" aria-label="Human review queue">
+      <h2>Human review queue <b id="qCount"></b></h2>
+      <div class="btnrow" style="margin:0 0 .8rem"><button class="ghost" id="refreshQ">Refresh queue</button></div>
+      <div id="queue"></div>
+    </section>
+  </main>
+  <footer>POST /tickets/submit · GET /review-queue · POST /review/{id} · GET /metrics · single static file, no build step</footer>
+</div>
+<div id="toasts"></div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let LABELS=['billing'],busy=false;
+const SAMPLES={
+  vpn:['VPN not working','Cannot connect to the corporate VPN since this morning, error 809.','cust-2'],
+  vague:['hmm','not sure, thing is weird','cust-3']
+};
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const s=SAMPLES[b.dataset.s];$('title').value=s[0];$('body').value=s[1];$('customer').value=s[2];});
+$('triageBtn').onclick=submitTicket;
+$('refreshQ').onclick=()=>{loadQueue();loadMetrics();};
+
+function toast(msg,cls){
+  const t=document.createElement('div');t.className='toast '+(cls||'');t.textContent=msg;
+  $('toasts').appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350);},3200);
+}
+function badge(a){
+  if(a==='auto_route')return '<span class="badge auto">AUTO-ROUTE</span>';
+  if(a==='abstain')return '<span class="badge abs">ABSTAIN</span>';
+  return '<span class="badge rev">HUMAN REVIEW</span>';
+}
+function barColor(a){
+  return a==='auto_route'?'var(--ok)':a==='abstain'?'var(--abstain)':'var(--amber)';
+}
+async function submitTicket(){
+  if(busy)return;busy=true;
+  const btn=$('triageBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Triaging…';
+  try{
+    const r=await fetch('/tickets/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({title:$('title').value,body:$('body').value,customer_id:$('customer').value})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    $('result').innerHTML='<div class="verdict"><div class="vtop">'+badge(j.action)+
+      '<span class="vlabel">'+esc(j.label)+'</span></div>'+
+      '<div class="confbar"><i data-w="'+Math.round(j.confidence*100)+'" style="background:'+barColor(j.action)+'"></i></div>'+
+      '<div class="vmeta">confidence '+j.confidence.toFixed(2)+(j.runner_up?' · runner-up '+esc(j.runner_up):'')+
+      '<br>ticket '+esc(j.ticket_id)+' · '+j.latency_ms.toFixed(1)+'ms'+
+      '<br>baseline '+esc(j.baseline_label)+' · model '+esc(j.model_label)+' · agreement '+(j.agreement?'yes':'no')+'</div>'+
+      ((j.reasons&&j.reasons.length)?'<div class="reasons">'+j.reasons.map(x=>'<span class="reason">'+esc(x)+'</span>').join('')+'</div>':'')+
+      (j.duplicate_of?'<div class="dup">Possible duplicate of '+esc(j.duplicate_of)+' (score '+j.duplicate_score.toFixed(2)+')</div>':'')+'</div>';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const b=document.querySelector('#result .confbar i');if(b)b.style.width=b.dataset.w+'%';
+    }));
+    $('kLat').innerHTML=j.latency_ms.toFixed(1)+'<small>ms</small>';
+    toast(j.action==='auto_route'?'Routed to '+j.label:'Sent to human review ('+j.label+')',j.action==='auto_route'?'ok':'warn');
+    loadMetrics();loadQueue();
+  }catch(e){
+    $('result').innerHTML='<div class="verdict"><div class="vmeta">Request failed ('+esc(e.message)+'). Is the API running?</div></div>';
+  }
+  btn.disabled=false;btn.textContent='Triage';busy=false;
+}
+async function loadMetrics(){
+  try{
+    const j=await(await fetch('/metrics')).json();
+    const total=j.total||0,rr=j.review_rate||0;
+    let auto=null;
+    if(j.counts&&total){const routed=j.counts.routed||j.counts.auto_routed||0;auto=Math.round(routed/total*100);}
+    if(auto===null||isNaN(auto))auto=Math.round((1-rr)*100);
+    $('kTotal').textContent=total;
+    $('kReview').innerHTML=Math.round(rr*100)+'<small>%</small>';
+    $('kAuto').innerHTML=auto+'<small>%</small>';
+  }catch{}
+}
+async function loadQueue(){
+  const q=$('queue');
+  try{
+    const j=await(await fetch('/review-queue')).json();
+    const items=j.tickets||[];
+    $('qCount').textContent='· '+items.length;
+    if(!items.length){q.innerHTML='<div class="empty">Queue empty — everything confident so far.</div>';return;}
+    q.innerHTML=items.map(t=>'<div class="qitem" data-id="'+esc(t.id)+'">'+
+      '<div class="qt">'+esc(t.title||t.ticket_id)+'</div>'+
+      '<div class="qm">'+esc(t.label||'?')+' · '+esc(t.status||'needs review')+' · '+esc(t.id)+'</div>'+
+      (t.confidence!=null?'<div class="confbar"><i style="width:'+Math.round(t.confidence*100)+'%;background:var(--amber)"></i></div>':'')+
+      '<div class="qactions"><button class="btn-sm btn-ok" data-act="approve">Approve</button>'+
+      '<select>'+LABELS.map(l=>'<option'+(l===t.label?' selected':'')+'>'+l+'</option>').join('')+'</select>'+
+      '<button class="btn-sm btn-over" data-act="override">Override</button></div></div>').join('');
+    q.querySelectorAll('.qitem').forEach(item=>{
+      const id=item.dataset.id;
+      item.querySelector('[data-act=approve]').onclick=()=>review(id,'approve',null,item);
+      item.querySelector('[data-act=override]').onclick=()=>review(id,'override',item.querySelector('select').value,item);
+    });
+  }catch{q.innerHTML='<div class="empty">Could not load queue.</div>';}
+}
+async function review(id,decision,label,item){
+  const body={decision,reviewer:'demo-reviewer'};
+  if(decision==='override')body.label=label;
+  const r=await fetch('/review/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){item.classList.add('gone');setTimeout(()=>{loadQueue();loadMetrics();},reduceMotion?0:300);toast(decision==='approve'?'Approved '+id:'Overridden → '+label,'ok');}
+  else toast('Review failed ('+r.status+')','warn');
+}
+fetch('/health').then(r=>r.json()).then(h=>{
+  if(h.labels)LABELS=String(h.labels).split(',').map(s=>s.trim()).filter(Boolean);
+  loadQueue();
+}).catch(()=>loadQueue());
+loadMetrics();
+</script>
+</body>
+</html>
