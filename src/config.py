@@ -18,6 +18,7 @@ class Settings(BaseModel):
     llm_api_key: str = Field(default="")
     llm_base_url: str = Field(default="https://api.openai.com/v1")
     llm_model: str = Field(default="gpt-4o-mini")
+    llm_fallback_models: str = Field(default="")
     auto_threshold: float = Field(default=0.80)
     review_threshold: float = Field(default=0.55)
     duplicate_threshold: float = Field(default=0.82)
@@ -46,6 +47,7 @@ def _from_env() -> Settings:
         llm_api_key=os.getenv("LLM_API_KEY", ""),
         llm_base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"),
         llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
+        llm_fallback_models=os.getenv("LLM_FALLBACK_MODELS", ""),
         auto_threshold=float(os.getenv("AUTO_THRESHOLD", "0.80")),
         review_threshold=float(os.getenv("REVIEW_THRESHOLD", "0.55")),
         duplicate_threshold=float(os.getenv("DUPLICATE_THRESHOLD", "0.82")),

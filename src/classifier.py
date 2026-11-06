@@ -21,6 +21,7 @@ import re
 import time
 import urllib.request
 from collections import Counter
+from urllib.error import URLError
 from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
@@ -233,6 +234,51 @@ class MockLLMBackend:
         )
 
 
+# Free-model rotation pool. Every entry returned cost=0 on the 2026-11-06 probe
+# with the demo key. Distinct vendors: a vendor-level removal still leaves
+# answers working. Override with LLM_FALLBACK_MODELS="m1,m2" (primary first).
+FREE_POOL = [
+    "beam-free", "iceman-contributor-free", "crouton-alpha-free",
+    "deepseek-v4.1-flash", "qwen3.8-flash", "minimax-m3.1-flash", "glm-5.3-flash",
+]
+
+
+def rotation_list(primary: str, fallback_csv: str = "") -> list[str]:
+    """Primary first, then explicit fallbacks (or FREE_POOL), deduped."""
+    rest = [m.strip() for m in fallback_csv.split(",") if m.strip()] or [
+        m for m in FREE_POOL if m != primary
+    ]
+    seen = {primary}
+    out = [primary]
+    for m in rest:
+        if m not in seen:
+            seen.add(m)
+            out.append(m)
+    return out
+
+
+def _retryable(exc: BaseException) -> bool:
+    """Retry removed/rate-limited/crashed models; never retry auth/bad-request."""
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if code is not None:
+        try:
+            n = int(code)
+        except (TypeError, ValueError):
+            return False
+        if n == 400:
+            # Zen reports removed models as 400 "Model is unavailable" —
+            # rotate only on model-availability signals, not param errors.
+            msg = str(getattr(exc, "message", "") or exc).lower()
+            gone = ("unavailable", "not found", "notfound", "unknown model",
+                    "no such model", "deprecated", "removed", "does not exist")
+            return "model" in msg and any(s in msg for s in gone)
+        return n in (404, 408, 409, 429) or n >= 500
+    if isinstance(exc, URLError):
+        return True
+    name = type(exc).__name__.lower()
+    return "connect" in name or "timeout" in name or "transport" in name
+
+
 class OpenAICompatibleBackend:
     """Minimal OpenAI-compatible chat backend (stdlib http, no SDK needed)."""
 
@@ -249,41 +295,58 @@ class OpenAICompatibleBackend:
             mock.method = "llm-fallback-mock"
             return mock
         prompt = render_full_prompt(text)
-        body = json.dumps({
-            "model": self.settings.llm_model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0,
-            "max_tokens": 200,
-            "response_format": {"type": "json_object"},
-        }).encode()
-        req = urllib.request.Request(
-            f"{self.settings.llm_base_url}/chat/completions",
-            data=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.settings.llm_api_key}",
-                "User-Agent": "portfolio-live-smoke/1.0",
-                "x-opencode-session": os.getenv("OPENCODE_SESSION_ID", "portfolio-api"),
-            },
-            method="POST",
-        )
-        latency = 0.0
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                payload = json.loads(resp.read().decode())
-            content = payload["choices"][0]["message"]["content"]
-            data = json.loads(content)
-            label = str(data.get("label", ABSTAIN_LABEL))
-            conf = float(data.get("confidence", 0.0))
-            runner = data.get("runner_up")
-            reason = str(data.get("reason", ""))
-        except Exception as exc:  # network/parse failure -> abstain, never guess
+        primary = self.settings.llm_model
+        label, conf, runner, reason, used = ABSTAIN_LABEL, 0.0, None, "", primary
+        last: Exception | None = None
+        for m in rotation_list(primary, self.settings.llm_fallback_models):
+            body = json.dumps({
+                "model": m,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0,
+                "max_tokens": 200,
+                "response_format": {"type": "json_object"},
+            }).encode()
+            req = urllib.request.Request(
+                f"{self.settings.llm_base_url}/chat/completions",
+                data=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.settings.llm_api_key}",
+                    "User-Agent": "portfolio-live-smoke/1.0",
+                    "x-opencode-session": os.getenv("OPENCODE_SESSION_ID", "portfolio-api"),
+                },
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    payload = json.loads(resp.read().decode())
+                content = payload["choices"][0]["message"]["content"]
+                data = json.loads(content)
+                label = str(data.get("label", ABSTAIN_LABEL))
+                conf = float(data.get("confidence", 0.0))
+                runner = data.get("runner_up")
+                reason = str(data.get("reason", ""))
+            except Exception as exc:
+                if not _retryable(exc) and not isinstance(exc, json.JSONDecodeError):
+                    latency = (time.perf_counter() - start) * 1000
+                    return ClassificationResult(
+                        label=ABSTAIN_LABEL, confidence=0.0, method=self.method,
+                        reasoning=f"llm call failed ({m}), abstaining: {exc}",
+                        latency_ms=round(latency, 2), abstained=True,
+                    )
+                last = exc
+                continue
+            used, last = m, None
+            break
+        if last is not None:  # every model failed -> abstain, never guess
             latency = (time.perf_counter() - start) * 1000
             return ClassificationResult(
                 label=ABSTAIN_LABEL, confidence=0.0, method=self.method,
-                reasoning=f"llm call failed, abstaining: {exc}",
+                reasoning=f"all models failed, abstaining: {last}",
                 latency_ms=round(latency, 2), abstained=True,
             )
+        if used != primary:
+            reason = f"[fallback:{used}] " + reason
         latency = (time.perf_counter() - start) * 1000
         result = ClassificationResult(
             label=label, confidence=max(0.0, min(1.0, conf)),
